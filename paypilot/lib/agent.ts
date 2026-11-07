@@ -1,9 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { InvoiceDraft, ValidationResult } from "./types";
 import { validateDraft } from "./guardrails";
+import { withTimeout } from "./timeout";
+  import { MODEL } from "./config";
 
-// To switch AI models later, change only this line.
-const MODEL = "gemini-3.8-flash";
 
 const ai = new GoogleGenAI({});
 
@@ -59,7 +59,7 @@ async function callGemini(message: string) {
 }
 
 export async function parseInvoiceRequest(message: string): Promise<AgentResult> {
-  const response = await callGemini(message);
+    const response = await withTimeout(callGemini(message), 25000);
   const raw = JSON.parse(response.text ?? "{}");
 
   // Turn null into "missing" so the guardrails can handle it.
