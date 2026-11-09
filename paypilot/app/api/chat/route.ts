@@ -1,6 +1,6 @@
 import { parseInvoiceRequest } from "../../../lib/agent";
 import type { InvoiceDraft } from "../../../lib/types";
-
+import { createPending } from "../../../lib/pending";
 const LABELS: Record<keyof InvoiceDraft, string> = {
   clientName: "the client's name",
   clientEmail: "the client's email address",
@@ -42,12 +42,18 @@ export async function POST(request: Request) {
       reply = `I still need: ${list}.`;
     }
 
+        let actionId: string | undefined;
+    if (status === "ready") {
+      actionId = createPending("create_invoice", { ...draft }).id;
+    }
+
     return Response.json({
       status,
       reply,
       draft,
       missing: validation.missing,
       errors: validation.errors,
+      actionId,
     });
   } catch (err) {
     console.error("Agent error:", err);
