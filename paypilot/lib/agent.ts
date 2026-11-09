@@ -11,6 +11,7 @@ const SYSTEM_PROMPT = `You extract invoice details from a freelancer's message.
 Rules:
 - Return only facts stated in the message. If a detail is not stated, return null for it. Never guess or invent an email address.
 - amount is a plain number in US dollars (for "$450" return 450).
+- Keep the sign. If the message says "negative" or "minus", or a minus sign is attached directly to the number (like -50), return a negative amount. A dash with spaces around it, such as "Bill Acme - $450", is just punctuation and is not a minus sign.
 - dueInDays is a whole number of days. Convert: "2 weeks" = 14, "a month" = 30, "net 30" = 30.
 - description is a short, professional summary of the work, for example "Logo design".
 - clientName is the person or company being billed.
