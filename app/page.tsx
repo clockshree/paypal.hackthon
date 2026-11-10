@@ -149,7 +149,10 @@ export default function DashboardPage() {
       setActionLogs((prev) => [newLog, ...prev]);
     }
   };
-
+// Handle actions completed through the AI Assistant
+const handleChatActionCompleted = (log: ActionLog) => {
+  setActionLogs((prev) => [log, ...prev]);
+};
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* 1. Sidebar */}
@@ -262,7 +265,10 @@ export default function DashboardPage() {
             {/* Right Column: AI Assistant */}
             <div className="lg:col-span-1">
               <h2 className="text-lg font-bold text-slate-800 mb-4">AI Copilot</h2>
-              <ChatPanel initialMessages={INITIAL_CHAT_MESSAGES} />
+              <ChatPanel
+  initialMessages={INITIAL_CHAT_MESSAGES}
+  onActionCompleted={handleChatActionCompleted}
+/>
             </div>
           </div>
         </main>
