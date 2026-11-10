@@ -305,7 +305,7 @@ export async function getInvoiceByPaypalId(
   }
 
   if (isMockMode()) seedMockData();
-  for (const inv of globalStore.invoices.values()) {
+  for (const inv of Array.from(globalStore.invoices.values())) {
     if (inv.paypalInvoiceId === paypalInvoiceId) {
       return inv;
     }
