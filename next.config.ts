@@ -1,4 +1,4 @@
-
+﻿
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/paypilot/:path*",
-        destination: "http://localhost:3001/api/:path*",
+        destination: "/api/:path*",
       },
     ];
   },
@@ -25,3 +25,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+

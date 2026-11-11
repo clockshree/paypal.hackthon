@@ -1,6 +1,6 @@
-import { parseInvoiceRequest } from "../../../lib/agent";
+﻿import { parseInvoiceRequest } from "../../../lib/agent";
 import type { InvoiceDraft } from "../../../lib/types";
-import { createPending } from "../../../lib/pending";
+import { createPendingAction } from "../../../lib/db";
 const LABELS: Record<keyof InvoiceDraft, string> = {
   clientName: "the client's name",
   clientEmail: "the client's email address",
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
         let actionId: string | undefined;
     if (status === "ready") {
-      actionId = createPending("create_invoice", { ...draft }).id;
+      actionId = (await createPendingAction("create_invoice", draft as InvoiceDraft)).id;
     }
 
     return Response.json({
