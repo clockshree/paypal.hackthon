@@ -11,7 +11,7 @@ import {
 } from '@/data/mockData';
 
 // TOGGLE: Change this to `false` once backend endpoints are live.
-export const USE_MOCK_FALLBACK = true;
+export const USE_MOCK_FALLBACK = false;
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
