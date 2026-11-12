@@ -6,7 +6,6 @@ import {
 } from "@/lib/db";
 import { PendingActionStatus, PendingActionType } from "@/lib/types";
 
-export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {

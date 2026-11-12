@@ -1,7 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { getPendingAction, logEvent, resolveAction } from "@/lib/db";
 
-export const runtime = "nodejs";
 
 export async function POST(
   _request: NextRequest,

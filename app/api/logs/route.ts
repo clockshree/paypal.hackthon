@@ -1,7 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { listLogs } from "@/lib/db";
 
-export const runtime = "nodejs";
 
 export async function GET() {
   try {

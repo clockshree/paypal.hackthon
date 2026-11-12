@@ -2,7 +2,6 @@
 import { listInvoices, updateInvoiceStatus } from "@/lib/db";
 import { getInvoiceStatus } from "@/lib/paypal";
 
-export const runtime = "nodejs";
 
 export async function GET() {
   try {

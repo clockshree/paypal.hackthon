@@ -6,7 +6,6 @@ import {
 } from "@/lib/db";
 import { verifyWebhookSignature } from "@/lib/paypal";
 
-export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {

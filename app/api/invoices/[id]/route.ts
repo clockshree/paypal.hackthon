@@ -1,7 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { getInvoice } from "@/lib/db";
 
-export const runtime = "nodejs";
 
 export async function GET(
   _request: NextRequest,

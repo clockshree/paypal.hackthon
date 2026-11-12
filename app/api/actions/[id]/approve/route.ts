@@ -9,7 +9,6 @@ import {
 import { createAndSendInvoice, sendReminder } from "@/lib/paypal";
 import { InvoiceDraft } from "@/lib/types";
 
-export const runtime = "nodejs";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
