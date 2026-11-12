@@ -1,4 +1,4 @@
-import { InvoiceDraft, InvoiceStatus } from "./types";
+﻿import { InvoiceDraft, InvoiceStatus } from "./types";
 
 export class PayPalError extends Error {
   statusCode: number;
@@ -242,7 +242,7 @@ export async function createAndSendInvoice(draft: InvoiceDraft): Promise<{
         given_name: invGiven,
         surname: invSurname,
       },
-      email_address: invoicerEmail,
+      ...(process.env.INVOICER_EMAIL ? { email_address: invoicerEmail } : {}),
     },
     primary_recipients: [
       {
@@ -629,3 +629,4 @@ export async function verifyWebhookSignature(
   const data = await res.json();
   return data.verification_status === "SUCCESS";
 }
+
