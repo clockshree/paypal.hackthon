@@ -1,4 +1,4 @@
-// services/api.ts
+﻿// services/api.ts
 import { 
   Invoice, 
   ApprovalRequest, 
@@ -13,7 +13,7 @@ import {
 // TOGGLE: Change this to `false` once backend endpoints are live.
 export const USE_MOCK_FALLBACK = false;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/ui';
 
 /**
  * 1. Fetch Invoices

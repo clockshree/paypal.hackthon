@@ -1,152 +1,77 @@
+# PayPilot: an AI invoicing agent for freelancers
 
-# PayPal AI Settlement Hub — PayPilot | Hackathon 2026
+Type a request in plain English, like *"Bill Acme $450 for the logo, due in 14 days"*. PayPilot's AI turns it into an invoice draft, checks it, asks for anything missing, and waits for **your approval** before creating and sending a real invoice through the **PayPal Invoicing API** (sandbox).
 
-An AI-powered invoicing and settlement management platform built for the PayPal AI Hackathon 2026. PayPilot helps freelancers and finance teams manage invoices, review payment actions, generate reminders, and simplify financial workflows using natural language.
+Built for the PayPal AI Hackathon.
 
-## 1. Project Overview
+## How PayPal and AI work together
 
-Managing invoices, tracking payments, resolving billing disputes, and following up on overdue payments can be time-consuming.
+1. **Understand.** Google Gemini reads the request and extracts the client, email, description, amount and due date. Anything not stated stays empty, and the model is told never to invent an email.
+2. **Check.** Plain code validates every field (valid email, amount above 0 and under a safety limit, due date within 90 days). Missing or invalid details are sent back to the user as a question.
+3. **Approve.** A complete draft is stored as a *pending action*. Nothing happens until the freelancer clicks Approve, and an action can be approved only once, which prevents duplicate invoices.
+4. **Pay.** On approval, the backend calls PayPal's Invoicing API v2 to create and send the invoice. The client receives a PayPal invoice and pays it.
+5. **Track and remind.** Invoices and an audit log are stored and shown in the dashboard. An endpoint drafts friendly, professional or firm payment reminders with Gemini, with a built-in fallback message if the AI is slow.
 
-PayPal AI Settlement Hub provides a dashboard and AI-powered assistant to simplify these tasks. Users can review invoices, monitor payment statuses, generate reminders, and interact with an AI agent that prepares invoice actions for human approval.
+The AI only proposes. A human approves, and separate code validates, before any money-related action runs.
 
-## 2. Problem Statement
+## Tech stack
 
-- **Manual Invoice Management:** Creating and tracking invoices requires repetitive work.
-- **Fragmented Workflows:** Invoice approvals, reminders, and payment tracking happen across different tools.
-- **Slow Payment Follow-ups:** Overdue invoices can affect cash flow.
-- **Billing Errors:** Incorrect invoice details can lead to disputes and delays.
+- Next.js 16 and React 19 with Tailwind CSS (dashboard and API routes in one app)
+- Google Gemini through `@google/genai` (model set in `lib/config.ts`)
+- PayPal Invoicing REST API v2, sandbox (`lib/paypal.ts`)
+- Neon Postgres through `@neondatabase/serverless`, with an in-memory fallback when no database URL is set (`lib/db.ts`)
 
-## 3. Proposed Solution
+## Run it locally
 
-The platform combines an interactive settlement dashboard with an AI invoicing agent.
+1. Install Node.js 20 or newer, then run:
 
-1. Displays invoice information and payment statuses.
-2. Helps users identify invoices requiring attention.
-3. Allows users to interact with an AI assistant using natural language.
-4. Prepares invoice actions for human approval.
-5. Generates payment reminder messages.
-6. Maintains an action and audit log.
+   ```
+   npm install
+   ```
 
-## 4. Frontend Dashboard Features
+2. Copy `.env.example` to `.env.local` and fill it in:
+   - `GEMINI_API_KEY`: a free key from aistudio.google.com.
+   - **Quick start without PayPal keys:** keep `USE_MOCKS=true`. PayPal responses are simulated, and the dashboard shows demo data.
+   - **Real PayPal sandbox:** set `USE_MOCKS=false` and add `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from a sandbox app that belongs to a **United States** business sandbox account with **Invoicing** enabled under Features. Leave `INVOICER_EMAIL` blank. Bill a **US personal sandbox account** (PayPal cannot send invoices to Indian accounts).
 
-- **Summary Metrics:** Displays invoice volume, pending reviews, settled payments, and transaction values.
-- **Approval Cards:** Shows invoice details and actions requiring review.
-- **Invoice Management Table:** Supports invoice search and payment-status filtering.
-- **Payment Reminders:** Displays scheduled reminders and delivery channels.
-- **Action & Audit Log:** Records approvals, rejections, and reminder dismissals.
-- **AI Copilot Panel:** Provides a chat interface for invoice-related queries.
-- **Loading and Error States:** Includes loading indicators, empty states, and retry options.
+3. Start the app and open http://localhost:3000:
 
-## 5. AI Agent — PayPilot's Brain
+   ```
+   npm run dev
+   ```
 
-PayPilot allows a freelancer to enter a request such as:
+4. In the AI Copilot, type: `Invoice Sarah (sarah@example.com) 1200 dollars for website design, net 30`, then click **Approve**.
 
-"Bill Acme $450 for the logo, due in 14 days."
+## API overview
 
-The AI agent converts the request into a structured invoice draft and checks the details. The invoice is not created until the user approves it.
-
-### How It Works
-
-1. **Understand:** `lib/agent.ts` sends the user's message to Google Gemini and extracts invoice details.
-2. **Check:** `lib/guardrails.ts` validates the email, amount, and due date.
-3. **Ask:** If information is missing or invalid, the agent asks the user for clarification.
-4. **Approve:** A complete draft is saved as a pending action using `lib/pending.ts`.
-5. **Execute:** `lib/executor.ts` handles the approved action.
-6. **Remind:** `lib/reminders.ts` generates payment reminder messages.
-
-### API Endpoints
-
-| Method and path | Purpose |
+| Endpoint | Purpose |
 |---|---|
-| `POST /api/chat` | Processes the user's natural-language request. |
-| `POST /api/actions/{id}/approve` | Approves and executes a pending action. |
-| `POST /api/actions/{id}/reject` | Rejects a pending action. |
-| `POST /api/reminder` | Generates a payment reminder message. |
+| `POST /api/chat` | Natural-language request in, draft invoice and `actionId` out |
+| `POST /api/actions/{id}/approve` | Approve a pending action and run it (creates and sends the PayPal invoice) |
+| `POST /api/actions/{id}/reject` | Reject a pending action |
+| `GET /api/invoices`, `GET /api/logs` | Stored invoices and the audit log |
+| `POST /api/reminder` | Draft a payment reminder (friendly, professional or firm) |
+| `POST /api/webhooks/paypal` | Receives PayPal payment events (signature verified) |
+| `GET /api/ui/*` | Reshapes the data for the dashboard |
 
-### Safety Features
+## Safety by design
 
-- Human approval is required before an invoice action is executed.
-- Separate validation code checks the invoice details.
-- Input fields and message lengths are restricted.
-- AI calls use timeouts, retries, and fallback responses.
-- API keys are stored in server-side environment variables.
+- Human approval before any invoice is sent, and one approval per action.
+- Validation in plain code: email format, amount limits, due-date range, message length.
+- The AI is instructed to ignore instructions inside user messages. Test script: `npx tsx --env-file=.env.local scripts/test-scenarios.ts`.
+- Timeouts, retries and fallbacks so a slow AI service does not freeze the app.
+- Secrets live only in `.env.local`, which is never committed.
 
-## 6. Technology Stack
+## Current limits (honest notes)
 
-- **Framework:** Next.js
-- **Frontend Library:** React
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **AI Model:** Google Gemini
-- **Icons:** Lucide React
-- **Version Control:** Git and GitHub
+- PayPal runs in **sandbox** only, so no real money moves.
+- The webhook that marks invoices as paid needs a public URL, so it is built but not exercised in local runs. Payment can be seen in the PayPal sandbox invoice page.
+- Without `DATABASE_URL`, data is kept in memory and resets when the server restarts.
 
-## 7. Project Structure
+## Team
 
-```text
-paypal_ai_hackathon/
-├── app/
-├── components/
-├── data/
-├── services/
-├── DEMO_SCRIPT.md
-├── README.md
-├── package.json
-└── paypilot/
-    ├── app/
-    │   └── api/
-    │       ├── actions/
-    │       ├── chat/
-    │       └── reminder/
-    ├── lib/
-    │   ├── agent.ts
-    │   ├── config.ts
-    │   ├── executor.ts
-    │   ├── guardrails.ts
-    │   ├── pending.ts
-    │   ├── reminders.ts
-    │   ├── timeout.ts
-    │   └── types.ts
-    ├── scripts/
-    ├── package.json
-    └── README.md
-```
+- **@clockshree:** AI agent, validation, reminders and integration
+- **Shreya H N:** dashboard and frontend
+- **@varshinim-19:** PayPal integration and database layer
 
-## 8. Running the AI Agent
-
-1. Install Node.js.
-2. Open the `paypilot` folder in the terminal.
-3. Install dependencies:
-
-```bash
-npm install
-```
-
-4. Create a `.env.local` file inside `paypilot` and add:
-
-```env
-GEMINI_API_KEY=your-key
-```
-
-5. Start the application:
-
-```bash
-npm run dev
-```
-
-6. Open `http://localhost:3000`.
-
-Get a Gemini API key from https://aistudio.google.com/.
-
-Never commit your API key or share it publicly.
-
-## 9. Future Enhancements
-
-- Integration with live PayPal invoice and payment services.
-- Improved invoice analytics and anomaly detection.
-- Automated payment tracking and notifications.
-- Enhanced AI-powered financial insights.
-
-## 10. Conclusion
-
-PayPal AI Settlement Hub combines an interactive invoice dashboard with an AI-powered invoicing assistant. By simplifying invoice creation, approval, and payment follow-ups, PayPilot aims to make financial workflows more efficient while keeping important actions under human control.
+Released under the MIT License.
